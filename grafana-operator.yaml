@@ -1,0 +1,185 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+  labels:
+    dashboards: "grafana"
+spec:
+  config:
+    log:
+      mode: "console"
+    security:
+      admin_user: root
+      admin_password: secret
+
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: credentials
+  namespace: default
+stringData:
+  PROMETHEUS_USERNAME: root
+  PROMETHEUS_PASSWORD: secret
+type: Opaque
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: grafanadatasource-sample
+spec:
+  valuesFrom:
+    - targetPath: "basicAuthUser"
+      valueFrom:
+        secretKeyRef:
+          name: "credentials"
+          key: "PROMETHEUS_USERNAME"
+    - targetPath: "secureJsonData.basicAuthPassword"
+      valueFrom:
+        secretKeyRef:
+          name: "credentials"
+          key: "PROMETHEUS_PASSWORD"
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  datasource:
+    name: prometheus
+    type: prometheus
+    access: proxy
+    basicAuth: true
+    url: http://prometheus-operated.default.svc.cluster.local:9090
+    isDefault: true
+    basicAuthUser: ${PROMETHEUS_USERNAME}
+    jsonData:
+      "tlsSkipVerify": true
+      "timeInterval": "5s"
+    secureJsonData:
+      "basicAuthPassword": ${PROMETHEUS_PASSWORD} # Notice the braces around PROMETHEUS_PASSWORD
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-views-global
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-views-global
+    key: k8s-views-global.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-views-namespaces
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-views-namespaces
+    key: k8s-views-namespaces.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-views-nodes
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-views-nodes
+    key: k8s-views-nodes.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-views-pods
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-views-pods
+    key: k8s-views-pods.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-system-api-server
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-system-api-server
+    key: k8s-system-api-server.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-system-coredns
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-system-coredns
+    key: k8s-system-coredns.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-addons-prometheus
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-addons-prometheus
+    key: k8s-addons-prometheus.json
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboards-k8s-addons-trivy-operator
+  labels:
+    grafana_dashboard: "1"
+spec:
+  resyncPeriod: 30s
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  configMapRef:
+    name: dashboards-k8s-addons-trivy-operator
+    key: k8s-addons-trivy-operator.json
